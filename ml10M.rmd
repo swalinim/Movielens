@@ -32,7 +32,7 @@ If a user has given a rating of 5 to a movie and we predicted the rating as 4, t
 We write a function called RMSE() that takes two numeric vectors (one is the true movie ratings and the other is predicted movie ratings) as input, and returns the root mean squared error (RMSE) between the two as output.
 
 
-```{
+```{r}
 #-----------------------------------------------------
 ## RMSE: compute root mean square error (RMSE)
 #-----------------------------------------------------
@@ -44,6 +44,7 @@ RMSE <- function(true_ratings, predicted_ratings){
 #-----------------------------------------------------
 ```
 
+
 ##Data: 
 
 We will work on the MovieLens dataset and try to build models to predict movie ratings. This data has been collected by the GroupLens Research Project at the University of Minnesota. The dataset can be downloaded  [here](https://grouplens.org/datasets/movielens/10m/). This dataset consists of 69878 unique users and 10677 unique movies.
@@ -51,7 +52,7 @@ We will work on the MovieLens dataset and try to build models to predict movie r
 We partition Movielens data into edx and validation sets using the code provided by edx.
 
 
-```{
+```{r}
 #-----------------------------------------------------
 ## Create edx set, validation set
 #-----------------------------------------------------
@@ -106,10 +107,11 @@ rm(dl, ratings, movies, test_index, temp, movielens, removed)
 
 ```
 
+
 Next, we partition edx data set into training and test data sets, so that test set can be used to evaluate results while developing models.  Set.seed() command is used to reproduce same results every time.  createDataPartition command from caret package is used to partition data into train and test sets from edx data set. Train set contains 90% of edx data while test set has 10% of edx data which are randomly selected. Train and test set will be used for further analyses and model development. Also, we ensure train set data contains userId and movieId which are present in test data set. We remove variables which are not required to save space.
 
 
-```{
+```{r}
 #-----------------------------------------------------
 ## Create train and test sets from edx data set
 #-----------------------------------------------------
@@ -140,36 +142,24 @@ rm(removed, temp, test_index)
 #-----------------------------------------------------
 
 ```
+
+
 #Data Exploration:
 
 By simply typing the name of the data set we can see this table has data in tidy format and there are thousands of rows.
 
-```{
+```{r}
 # Exploring train data set
 
 train %>% as_tibble()
 
 ```
-```{
-# A tibble: 8,100,065 x 6
-   userId movieId rating timestamp title                   genres                 
-    <int>   <dbl>  <dbl>     <int> <chr>                   <chr>                  
- 1      1     122      5 838985046 Boomerang (1992)        Comedy|Romance         
- 2      1     292      5 838983421 Outbreak (1995)         Action|Drama|Sci-Fi|Th~
- 3      1     316      5 838983392 Stargate (1994)         Action|Adventure|Sci-Fi
- 4      1     329      5 838983392 Star Trek: Generations~ Action|Adventure|Drama~
- 5      1     355      5 838984474 Flintstones, The (1994) Children|Comedy|Fantasy
- 6      1     356      5 838983653 Forrest Gump (1994)     Comedy|Drama|Romance|W~
- 7      1     362      5 838984885 Jungle Book, The (1994) Adventure|Children|Rom~
- 8      1     364      5 838983707 Lion King, The (1994)   Adventure|Animation|Ch~
- 9      1     370      5 838984596 Naked Gun 33 1/3: The ~ Action|Comedy          
-10      1     377      5 838983834 Speed (1994)            Action|Romance|Thriller
-# ... with 8,100,055 more rows
 
-```
+
 We can further obtain the distinct number of users who rated the movies and the distinct number of movies which were rated. We can obtain the highest and lowest rating given. Each row represents the rating given by one user to one movie.
 
-```{
+
+```{r}
 train %>% summarize(
   n_users=n_distinct(userId),# unique users from train data set
   n_movies=n_distinct(movieId),# unique movies from train data set
@@ -178,13 +168,12 @@ train %>% summarize(
 )
 
 ```
-```{
- n_users n_movies min_rating max_rating
-1   69878    10677        0.5          5
 
-```
+
 We can observe that not all users have rated all movies. So we can think of these data as a very large matrix, with rows representing users and columns representing movies and many empty cells. Here we show the matrix for 5 movies and first 10 users. Spread function is used to display data in this format. Trying for entire train data set will crash R. 
-```{
+
+
+```{r}
 # Display movies and users as a matrix
 
 movie_matrix <- train %>% 
@@ -203,19 +192,17 @@ final_matrix <- train %>%
 final_matrix %>% knitr::kable()
 
 ```
-```{
 
-| userId| Forrest Gump (1994)| Jurassic Park (1993)| Pulp Fiction (1994)| Silence of the Lambs (1991)|
-|------:|-------------------:|--------------------:|-------------------:|---------------------------:|
-|      1|                   5|                   NA|                  NA|                          NA|
-|      4|                  NA|                    5|                  NA|                          NA|
-|      7|                  NA|                   NA|                  NA|                           3|
-|      8|                  NA|                    3|                  NA|                           4|
-|     10|                   3|                   NA|                   2|                           3|
 
+```{r}
+rm(movie_matrix,final_matrix )
 ```
-The objective of this recommendation system is to fill the NAs in the above table with the most likely rating the user would give the movie. To see how sparse the matrix is, here is the matrix for a random sample of 100 movies and 100 users with yellow indicating a user/movie combination for which we have a rating.
-```{
+
+
+The objective of this recommendation system is to fill the NAs in the above table with the most likely rating the user would give the movie. To see how sparse the matrix is, here is the matrix for a random     sample of 100 movies and 100 users with yellow indicating a user/movie combination for which we have a rating.
+
+
+```{r}
 # This matrix displays a random sample of 100 movies and 100 users with yellow 
 # indicating a user/movie combination for which we have a rating.
 
@@ -229,11 +216,12 @@ train %>% filter(userId %in% users) %>%
 abline(h=0:100+0.5, v=0:100+0.5, col = "grey")
 
 ```
-![](F:\Machine Learning\Projects\Rplot1.png)
+
 
 Below is the distribution of movies and users. We can observe that some movies are rated more compared to other movies. Similarly some users have rated more movies than other users.
 
-```{
+
+```{r}
 # This plot displays rating count by movie
 
 train %>% 
@@ -244,9 +232,9 @@ train %>%
   ggtitle("Movies")
 
 ```
-![](F:\Machine Learning\Projects\Rplot2.png)
 
-```{
+
+```{r}
 # This plot displays rating count by users
 
 train %>% 
@@ -257,7 +245,7 @@ train %>%
   ggtitle("Users")
 
 ```
-![](F:\Machine Learning\Projects\Rplot3.png)
+
 
 #Data Modelling:
 
@@ -266,31 +254,28 @@ We start by building the basic model which is assigning the average of all ratin
 \[Y_{u,i} = \mu + \varepsilon_{u,i}\]
 
 where $\varepsilon_{u,i}$ is independent errors and $\mu$ the "true" rating for all movies. The average rating gives the least RMSE whereas any other number gives a higher RMSE.
-```{
+
+```{r}
 # Calulate the average movie rating mu
 
 mu <- mean(train$rating) 
 mu
 
 ```
-```{
-[1] 3.512456
 
-```
-```{
+```{r}
 # Compute RMSE for just the average
 
 naive_rmse <- RMSE(test$rating, mu) 
 naive_rmse
 
 ```
-```{
-[1] 1.060054
 
-```
+
 We will be comparing the results from different models. So we will tabulate the results in a table.
 
-```{
+
+```{r}
 # Create a results table to record RMSE for all models
 
 rmse_results <- tibble(Method = "Just the average", RMSE = naive_rmse)
@@ -298,12 +283,7 @@ rmse_results %>% knitr::kable()
 
 ```
 
-```{
-|Method           |     RMSE|
-|:----------------|--------:|
-|Just the average | 1.060054|
 
-```
 We can definitely do better.
 
 ###Modeling Movie effect
@@ -314,15 +294,18 @@ During data exploration we observed that some movies are generally rated more th
 
 We can use least squares to estimate the b_i in the following way,
 
-```{
+```{r eval=FALSE}
 # Fitting using least squares estimates will take a long time
 
 fit <- lm(rating ~ as.factor(movieId), data = train)
 ```
+
+
 but because there are thousands of b_i as each movie gets one, the lm() function will be very slow here if not impossible to run.
 
 In this particular situation, we know that the least square estimate b_i is just the average of Y_{u,i} - mu for each movie i. So we can compute them this way:
-```{
+
+```{r}
 # We will use the fact that b_i = Y(u,i) - mu
 
 mu <- mean(train$rating) 
@@ -333,10 +316,12 @@ movie_avgs %>% qplot(b_i, geom ="histogram", bins = 10, data = ., color = I("bla
 
 
 ```
-![](F:\Machine Learning\Projects\Rplot4.png)
+
 
 Let's evaluate the improvement in RMSE using this model:
-```{
+
+
+```{r}
 # Calulate RMSE for model with movie effect
 
 predicted_ratings <- mu + test %>% 
@@ -353,12 +338,8 @@ rmse_results <- bind_rows(rmse_results,
 rmse_results %>% knitr::kable()
 
 ```
-```{
-|Method                  |      RMSE|
-|:-----------------------|---------:|
-|Just the average        | 1.0600537|
-|Model with Movie Effect | 0.9429615|
-```
+
+
 This is an improvement compared to the previous model. Maybe we can still do better.
 
 ###Modeling movie and user effects
@@ -366,7 +347,7 @@ This is an improvement compared to the previous model. Maybe we can still do bet
 Similarly, during data exploration we observed that some users generally rate more movies than others. We can add a term b_u  to the equation of the movie effect model to account for this variation in movie rating.
 \[Y_{u,i} = \mu + b_i + b_u + \varepsilon_{u,i}\]
 
-```{
+```{r}
 # The plot below shows us there is variability across users
 
 train %>% 
@@ -377,15 +358,18 @@ train %>%
 
 
 ```
-![](F:\Machine Learning\Projects\Rplot5.png)
+
 
 Fitting with least squares estimates again will be very slow, so we the below method as in movie effect model.
-```{
+
+
+```{r eval=FALSE}
 # Fitting using least squares estimates will take a long time
 
 fit <- lm(rating ~ as.factor(movieId) + as.factor(userId))
 ```
-```{
+
+```{r}
 # We will use the fact that b_u = Y(u,i) - mu - b_i
 
 user_avgs <- train %>% 
@@ -394,8 +378,12 @@ user_avgs <- train %>%
   summarize(b_u = mean(rating - mu - b_i))
 
 ```
+
+
 Let's evaluate the improvement in RMSE using this model:
-```{
+
+
+```{r}
 # Calulate RMSE for model with movie and user effect
 
 predicted_ratings <- test %>% 
@@ -415,15 +403,8 @@ rmse_results %>% knitr::kable()
 
 
 ```
-```{
 
-|Method                          |      RMSE|
-|:-------------------------------|---------:|
-|Just the average                | 1.0600537|
-|Model with Movie Effect         | 0.9429615|
-|Model with Movie + User Effects | 0.8646843|
 
-```
 This is a good improvement over the movie effect model. Lets check regularization technique.
 
 ###Regularization
@@ -433,41 +414,34 @@ Regularization is used to penalize large estimates that are formed using small s
 These are noisy estimates that we should not trust, especially when it comes to prediction. Large errors can increase our RMSE, so we would rather be conservative when unsure.
 
 Let's look at the top 10 worst and best movies based on b_i. First, let's create a database that connects movieId to movie title:
-```{
+
+
+```{r}
 # Create a database that connects movieId to movie title
 
 movie_titles <- train %>% 
   select(movieId, title) %>%
   distinct()
 ```
+
+
 Here are the 10 best movies according to our estimate:
 
-```{
+
+```{r}
 # Top 10 best movies based on b_i
 
 movie_avgs %>% left_join(movie_titles, by="movieId") %>%
   arrange(desc(b_i)) %>% 
   select(title, b_i) %>% 
-  slice(1:10) %>%  
+  slice(3:12) %>%  
   knitr::kable()
 ```
-```{
-|title                                                                            |      b_i|
-|:--------------------------------------------------------------------------------|--------:|
-|Hellhounds on My Trail (1999)                                                    | 1.487544|
-|Satan's Tango (SAitAintangA) (1994)                                             | 1.487544|
-|Shadows of Forgotten Ancestors (1964)                                            | 1.487544|
-|Fighting Elegy (Kenka erejii) (1966)                                             | 1.487544|
-|Sun Alley (Sonnenallee) (1999)                                                   | 1.487544|
-|Blue Light, The (Das Blaue Licht) (1932)                                         | 1.487544|
-|Who's Singin' Over There? (a.k.a. Who Sings Over There) (Ko to tamo peva) (1980) | 1.237544|
-|Life of Oharu, The (Saikaku ichidai onna) (1952)                                 | 1.237544|
-|Human Condition II, The (Ningen no joken II) (1959)                              | 1.237544|
-|Human Condition III, The (Ningen no joken III) (1961)                            | 1.237544|
-```
+ 
+
 And here are the 10 worst:
 
-```{
+```{r}
 # Top 10 worse movies based on b_i
 
 movie_avgs %>% left_join(movie_titles, by="movieId") %>%
@@ -477,23 +451,12 @@ movie_avgs %>% left_join(movie_titles, by="movieId") %>%
   knitr::kable()
 
 ```
-```{
-|title                                     |       b_i|
-|:-----------------------------------------|---------:|
-|Besotted (2001)                           | -3.012456|
-|Hi-Line, The (1999)                       | -3.012456|
-|Accused (Anklaget) (2005)                 | -3.012456|
-|Confessions of a Superhero (2007)         | -3.012456|
-|War of the Worlds 2: The Next Wave (2008) | -3.012456|
-|SuperBabies: Baby Geniuses 2 (2004)       | -2.767775|
-|Disaster Movie (2008)                     | -2.745789|
-|From Justin to Kelly (2003)               | -2.638139|
-|Hip Hop Witch, Da (2000)                  | -2.603365|
-|Criminals (1996)                          | -2.512456|
-```
+
+
 How often the best and worse are rated:
 
-```{
+
+```{r}
 # To find how often the best obscure movies are rated
 
 train %>% count(movieId) %>% 
@@ -501,26 +464,12 @@ train %>% count(movieId) %>%
   left_join(movie_titles, by="movieId") %>%
   arrange(desc(b_i)) %>% 
   select(title, b_i, n) %>% 
-  slice(1:10) %>% 
+  slice(3:12) %>% 
   knitr::kable()
-```
-```{
-|title                                                                            |      b_i|  n|
-|:--------------------------------------------------------------------------------|--------:|--:|
-|Hellhounds on My Trail (1999)                                                    | 1.487544|  1|
-|Satan's Tango (SAitAintangA) (1994)                                             | 1.487544|  1|
-|Shadows of Forgotten Ancestors (1964)                                            | 1.487544|  1|
-|Fighting Elegy (Kenka erejii) (1966)                                             | 1.487544|  1|
-|Sun Alley (Sonnenallee) (1999)                                                   | 1.487544|  1|
-|Blue Light, The (Das Blaue Licht) (1932)                                         | 1.487544|  1|
-|Who's Singin' Over There? (a.k.a. Who Sings Over There) (Ko to tamo peva) (1980) | 1.237544|  4|
-|Life of Oharu, The (Saikaku ichidai onna) (1952)                                 | 1.237544|  2|
-|Human Condition II, The (Ningen no joken II) (1959)                              | 1.237544|  4|
-|Human Condition III, The (Ningen no joken III) (1961)                            | 1.237544|  4|
 ```
 
   
-```{
+```{r}
 # To find how often the worse obscure movies are rated
 
 train %>% count(movieId) %>% 
@@ -532,20 +481,7 @@ train %>% count(movieId) %>%
   knitr::kable()
 
 ```
-```{
-|title                                     |       b_i|   n|
-|:-----------------------------------------|---------:|---:|
-|Besotted (2001)                           | -3.012456|   1|
-|Hi-Line, The (1999)                       | -3.012456|   1|
-|Accused (Anklaget) (2005)                 | -3.012456|   1|
-|Confessions of a Superhero (2007)         | -3.012456|   1|
-|War of the Worlds 2: The Next Wave (2008) | -3.012456|   2|
-|SuperBabies: Baby Geniuses 2 (2004)       | -2.767775|  47|
-|Disaster Movie (2008)                     | -2.745789|  30|
-|From Justin to Kelly (2003)               | -2.638139| 183|
-|Hip Hop Witch, Da (2000)                  | -2.603365|  11|
-|Criminals (1996)                          | -2.512456|   1|
-```
+
 
 The supposed "best" and "worst" movies were rated by very few users, in most cases just 1. These movies were mostly obscure ones. This is because with just a few users, we have more uncertainty. Therefore, larger estimates of b_i, negative or positive, are more likely.
 
@@ -558,10 +494,10 @@ We use regularization for the estimate of both movie and user effects. We are mi
 
 Here we use cross-validation to pick a $\lambda$:
 
-```{
+```{r}
 # use cross-validation to pick the penalty term lambda:
 
-lambda <- seq(0, 10, 0.25)
+lambda <- seq(0, 5, 0.25)
 
 rmses <- sapply(lambda, function(l){
   mu <- mean(train$rating)
@@ -588,10 +524,9 @@ rmses <- sapply(lambda, function(l){
 qplot(lambda, rmses)
 
 ```
-![](F:\Machine Learning\Projects\Rplot6.png)
 
 
-```{
+```{r}
 # pick lambda with minimun rmse
      
 lambda <- lambda[which.min(rmses)]
@@ -600,11 +535,12 @@ lambda <- lambda[which.min(rmses)]
 
 lambda
 ```
-```{
-[1] 0.5
-```
-We use the test set for the final assessment of our this model
-```{
+
+
+We use the test set for the final assessment of this model
+
+
+```{r}
 # compute movie effect with regularization on train set
 
 b_i <- train %>% 
@@ -637,15 +573,8 @@ rmse_results <- bind_rows(rmse_results,
 rmse_results %>% knitr::kable()
 
 ```
-```{
 
-|Method                                       |      RMSE|
-|:--------------------------------------------|---------:|
-|Just the average                             | 1.0600537|
-|Model with Movie Effect                      | 0.9429615|
-|Model with Movie + User Effects              | 0.8646843|
-|Model with Regularized Movie and User Effect | 0.8645518|
-```
+
 In this case, regularization does not produce significant improvement in performance using RMSE as the metric.
 
 ##Matrix factorization
@@ -697,7 +626,7 @@ The usage of recosystem is quite simple, mainly consisting of the following step
 
 Following the steps mentioned above, the code for matrix factorization is as below:
 
-```{
+```{r}
 # Install/Load recosystem
 
 if(!require(recosystem)) install.packages("recosystem", repos = "http://cran.us.r-project.org")
@@ -718,7 +647,7 @@ rec <- Reco()
 
 We use cross validation to select the best tuning parameters.
 
-```{
+```{r}
 
 # Call the $tune() method to select best tuning parameters 
 
@@ -731,32 +660,11 @@ opts = rec$tune(train_matrix, opts = list(dim = c(10, 20, 30), lrate = c(0.05, 0
 print(opts$min)
 
 ```
-```{
-$dim
-[1] 30
 
-$costp_l1
-[1] 0
-
-$costp_l2
-[1] 0.01
-
-$costq_l1
-[1] 0
-
-$costq_l2
-[1] 0.1
-
-$lrate
-[1] 0.1
-
-$loss_fun
-[1] 0.7974272
-```
 
 The following code trains a recommender model. It will read from a training data source and create a model file at the specified location. The model file contains necessary information for prediction. And the output is stored in memory. The resulting RMSE is compared with RMSE from other models.
 
-```{
+```{r}
 
 #Train the model by calling the $train() method. A number of parameters can be set 
 #inside the function, possibly coming from the result of $tune()
@@ -783,17 +691,12 @@ rmse_results %>% knitr::kable()
 
 
 ```
-```{
-|Method                                       |      RMSE|
-|:--------------------------------------------|---------:|
-|Just the average                             | 1.0600537|
-|Model with Movie Effect                      | 0.9429615|
-|Model with Movie + User Effects              | 0.8646843|
-|Model with Regularized Movie and User Effect | 0.8645518|
-|Model with Matrix Factorization              | 0.7856736|
-```
+
+
 Now that we have developed matrix factorization for train and test set, we finally calculate RMSE on edx and validation set.
-```{
+
+
+```{r}
 # The data file for edx and validation set needs to be arranged in sparse matrix  
 # triplet form, i.e., each line in the file contains three numbers
 # user_index item_index rating
@@ -837,18 +740,8 @@ rmse_results <- bind_rows(rmse_results,
                           tibble(Method="Model with Matrix Factorization on validation test",  
                                  RMSE = factorization_final))
 rmse_results %>% knitr::kable()
+```
 
-```
-```{
-|Method                                             |      RMSE|
-|:--------------------------------------------------|---------:|
-|Just the average                                   | 1.0600537|
-|Model with Movie Effect                            | 0.9429615|
-|Model with Movie + User Effects                    | 0.8646843|
-|Model with Regularized Movie and User Effect       | 0.8645518|
-|Model with Matrix Factorization                    | 0.7856736|
-|Model with Matrix Factorization on validation test | 0.7828578|
-```
 
 #Conclusion
 
@@ -862,10 +755,6 @@ Advantages of Matrix Factoriszation using recosystem package:
 recosystem is an R wrapper of the LIBMF library developed by Yu-Chin Juan, Wei-Sheng Chin, Yong Zhuang, Bo-Wen Yuan, Meng-Yuan Yang, and Chih-Jen Lin (http://www.csie.ntu.edu.tw/~cjlin/libmf/), an open source library for recommender system using parallel marix factorization. (Chin, Yuan, et al. 2015)
 
 recosystem is a wrapper of LIBMF, hence it inherits most of the features of LIBMF, and additionally provides a number of user-friendly R functions to simplify data processing and model building. Also, unlike most other R packages for statistical modeling that store the whole dataset and model object in memory, LIBMF (and hence recosystem) can significantly reduce memory use, for instance the constructed model that contains information for prediction can be stored in the hard disk, and output result can also be directly written into a file rather than be kept in memory.
-
-
-
-
 
 
 
